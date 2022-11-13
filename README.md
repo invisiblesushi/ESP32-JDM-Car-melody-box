@@ -1,1 +1,21 @@
 # ESP32-JDM-Car-melody-box
+
+Car melody box that plays an startup sound/melody when power is supplied. It's ment to be mounted in a car.
+
+# Part list
+- ESP32 wroom 32-u usb-c
+- Max98357 I2S 3W Class D Amplifier
+- Micro SD Storage Expansion Board
+- Speaker
+- SD card
+- MP3 sound files
+
+# Sound file source examples:
+https://ko-fi.com/s/8723a46daa
+
+# Libraries
+- ESP32-audioI2S https://github.com/schreibfaul1/ESP32-audioI2S
+
+# IDE
+- Visual studio code
+- Platformio
