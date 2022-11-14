@@ -18,12 +18,13 @@
 Audio audio;
 
 File dir;
+String startup_melody_dir = "/startup_melody";
 int file_num = 0;
 int file_index = 0;
 String file_list[256];
 
 
-int get_mp3_list(fs::FS fs, char *dir_name, String file_list[256]){
+int get_mp3_list(fs::FS fs, String dir_name, String file_list[256]){
 
   File dir = fs.open(dir_name);
   File file = dir.openNextFile();
@@ -67,7 +68,7 @@ void setup() {
     while(true); 
   }
 
-  dir = SD.open("/mp3");
+  dir = SD.open(startup_melody_dir);
 
   // Setup I2S 
   audio.setPinout(I2S_BCLK, I2S_LRC, I2S_DIN);
@@ -76,23 +77,27 @@ void setup() {
   audio.setVolume(30);
     
   // Open music file
-  audio.connecttoFS(SD,"mp3/jdmthankyousequence2.mp3");
+  //audio.connecttoFS(SD,"mp3/jdmthankyousequence2.mp3");
 
+  // Adds all mp3 files in directory to file_list
+  file_num = get_mp3_list(SD, startup_melody_dir, file_list);
+  Serial.print("Mp3 list count: ");
+  Serial.println(file_num);
 
-  file_num = get_mp3_list(SD, "/mp3", file_list);
-  Serial.println("Mp3 list count: ");
-  Serial.print(file_num);
+  // Picks random mp3 file
+  int random_index = random(file_num);
+  Serial.println(random_index);
 
-  
+  String mp3_path = startup_melody_dir + "/" + file_list[random_index];
+  Serial.print(mp3_path);
 
+  // Play mp3
+  audio.connecttoFS(SD, mp3_path.c_str());
 }
 
 
-
-
-
 void loop() {
-    audio.loop();    
+  audio.loop();
 }
 
 
