@@ -10,7 +10,7 @@
 #define SD_CLK 18
 
 // Max98357 I2S connections
-#define I2S_DIN 22
+#define I2S_DOUT 22
 #define I2S_BCLK 26
 #define I2S_LRC 25
 
@@ -71,10 +71,10 @@ void setup() {
   dir = SD.open(startup_melody_dir);
 
   // Setup I2S 
-  audio.setPinout(I2S_BCLK, I2S_LRC, I2S_DIN);
+  audio.setPinout(I2S_BCLK, I2S_LRC, I2S_DOUT);
     
   // Set Volume
-  audio.setVolume(30);
+  audio.setVolume(64); //{ 0,1,  2,  3,  4 , 6 , 8, 10, 12, 14, 17, 20, 23, 27, 30 ,34, 38, 43 ,48, 52, 58, 64}
     
   // Open music file
   //audio.connecttoFS(SD,"mp3/jdmthankyousequence2.mp3");
