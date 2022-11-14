@@ -18,6 +18,37 @@
 Audio audio;
 
 File dir;
+int file_num = 0;
+int file_index = 0;
+String file_list[256];
+
+
+int get_mp3_list(fs::FS fs, char *dir_name, String file_list[256]){
+
+  File dir = fs.open(dir_name);
+  File file = dir.openNextFile();
+
+  int i = 0;
+
+  // Loops through all files in directory and add mp3 files to list
+  while (file)
+  {
+    if (!file.isDirectory()){
+      String temp_file = file.name();
+
+      if (temp_file.endsWith(".mp3"))
+      {
+        file_list[i] = temp_file;
+        i++;
+        Serial.println(temp_file);
+      }
+    }
+
+    file = dir.openNextFile();
+  }
+
+  return i;
+}
 
 
 
@@ -45,29 +76,26 @@ void setup() {
   audio.setVolume(30);
     
   // Open music file
-  audio.connecttoFS(SD,"mp3/jdmsafedrivesequence2.mp3");
+  audio.connecttoFS(SD,"mp3/jdmthankyousequence2.mp3");
 
+
+  file_num = get_mp3_list(SD, "/mp3", file_list);
+  Serial.println("Mp3 list count: ");
+  Serial.print(file_num);
 
   
-  int numberOfFiles = 0;
-  String files[100] = {};
 
-  // prints all files in directory
-  while (true)
-  {
-    File entry = dir.openNextFile();
-
-    if (! entry)
-    {
-      break;
-    }
-
-    Serial.println(entry.name());
-  };
-
-  Serial.println(numberOfFiles);
 }
+
+
+
+
 
 void loop() {
     audio.loop();    
 }
+
+
+
+
+
