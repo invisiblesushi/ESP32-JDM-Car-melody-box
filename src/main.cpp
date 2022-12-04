@@ -14,6 +14,7 @@
 #define I2S_BCLK 26
 #define I2S_LRC 25
 
+
 // Audio object
 Audio audio;
 
@@ -57,6 +58,13 @@ void setup() {
   // Initialize serial port
   Serial.begin(115200);
 
+
+// This statement will declare pin 15 as digital input 
+pinMode(15, INPUT);
+pinMode(2, INPUT);
+pinMode(4, INPUT);
+pinMode(32, INPUT);
+
   // Initialize SD card
   pinMode(SD_CS, OUTPUT);      
   digitalWrite(SD_CS, HIGH); 
@@ -74,10 +82,7 @@ void setup() {
   audio.setPinout(I2S_BCLK, I2S_LRC, I2S_DOUT);
     
   // Set Volume
-  audio.setVolume(64); //{ 0,1,  2,  3,  4 , 6 , 8, 10, 12, 14, 17, 20, 23, 27, 30 ,34, 38, 43 ,48, 52, 58, 64}
-    
-  // Open music file
-  //audio.connecttoFS(SD,"mp3/jdmthankyousequence2.mp3");
+  audio.setVolume(64); //{ 0, 1, 2, 3, 4 , 6 , 8, 10, 12, 14, 17, 20, 23, 27, 30 ,34, 38, 43 ,48, 52, 58, 64}
 
   // Adds all mp3 files in directory to file_list
   file_num = get_mp3_list(SD, startup_melody_dir, file_list);
@@ -97,7 +102,48 @@ void setup() {
 
 
 void loop() {
+
+
+  //audio.loop();
+
+  /*
+  if (audio.isRunning() == false)
+  {
+    audio.connecttoFS(SD, "/startup_melody/2Tofu delivery machine ready to go!.mp3");
+  }
+  */
+
+ // digitalRead function stores the Push button state 
+// in variable push_button_state
+int Push_button15_state = digitalRead(15);
+int Push_button2_state = digitalRead(2);
+int Push_button4_state = digitalRead(4);
+int Push_button32_state = digitalRead(32);
+// if condition checks if push button is pressed
+// if pressed LED will turn on otherwise remain off 
+if ( Push_button15_state == HIGH )
+{
+  Serial.print("15 High");
+  sleep(1);
+}
+
+if ( Push_button2_state == HIGH )
+{
+  Serial.print("2 High");
+  sleep(1);
+}
+
+if ( Push_button4_state == HIGH )
+{
+  Serial.print("4 High");
+  sleep(1);
+}
+
+if ( Push_button32_state == HIGH )
+{
   audio.loop();
+}
+
 }
 
 
