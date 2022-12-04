@@ -4,6 +4,7 @@ Car melody box that plays an startup sound/melody when power is supplied. It's m
 
 <img src="/Images/Schematic.png" width="500" />
 <img src="/Images/Schematic%20diagram.png" width="500" />
+<img src="/Images/PCB.png" width="500" />
 
 # Part list
 - ESP32 wroom 32-u usb-c
