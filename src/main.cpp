@@ -30,6 +30,7 @@ OneButton button2 = OneButton(
 
 // Audio object
 Audio audio;
+int audio_volume = 0;
 
 // File
 File dir;
@@ -126,36 +127,27 @@ void previous_mp3(){
   audio.connecttoFS(SD, mp3_path.c_str());
 }
 
-
-// This function will be called once, when the button1 is pressed for a long time.
-void longPressStart1() {
-  Serial.println("Button 1 longPress start");
+// Volume control - increase
+void increase_volume(){
+  if (audio_volume <= 21)
+  {
+    audio_volume++;
+  }
+  audio.setVolume(audio_volume);
+  Serial.print("Volume:");
+  Serial.println(audio_volume);
+  delay(500);
 }
-
-// This function will be called often, while the button1 is pressed for a long time.
-void longPress1() {
-  Serial.println("Button 1 longPress...");
-sleep(1);
-}
-
-// This function will be called once, when the button1 is released after beeing pressed for a long time.
-void longPressStop1() {
-  Serial.println("Button 1 longPress stop");
-}
-
-
-
-void longPressStart2() {
-  Serial.println("Button 2 longPress start");
-}
-
-void longPress2() {
-  Serial.println("Button 2 longPress...");
-  sleep(1);
-}
-
-void longPressStop2() {
-  Serial.println("Button 2 longPress stop");
+// Volume control - decrease
+void decrease_volume(){
+  if (audio_volume > 1)
+  {
+    audio_volume--;
+  }
+  audio.setVolume(audio_volume);
+  Serial.print("Volume:");
+  Serial.println(audio_volume);
+  delay(500);
 }
 
 TaskHandle_t Task1;
@@ -195,7 +187,8 @@ void init(){
   audio.setPinout(I2S_BCLK, I2S_LRC, I2S_DOUT);
     
   // Set Volume
-  audio.setVolume(10); //21 max volume
+  audio_volume = 10;
+  audio.setVolume(audio_volume); //21 max volume
 }
 
 void init_Btn(){
@@ -206,15 +199,11 @@ void init_Btn(){
 
   // link the button 1 functions.
   button1.attachClick(previous_mp3);
-  button1.attachLongPressStart(longPressStart1);
-  button1.attachLongPressStop(longPressStop1);
-  button1.attachDuringLongPress(longPress1);
+  button1.attachDuringLongPress(decrease_volume);
 
   // link the button 2 functions.
   button2.attachClick(next_mp3);
-  button2.attachLongPressStart(longPressStart2);
-  button2.attachLongPressStop(longPressStop2);
-  button2.attachDuringLongPress(longPress2);
+  button2.attachDuringLongPress(increase_volume);
 
 
   //create a task that will be executed in the Task1code() function, with priority 1 and executed on core 0
