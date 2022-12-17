@@ -37,7 +37,7 @@ String startup_melody_dir = "/startup_melody";
 int file_num = 0;
 int file_index = 0;
 String file_list[256];
-
+int mp3_index = 0;
 
 int get_mp3_list(fs::FS fs, String dir_name, String file_list[256]){
 
@@ -66,11 +66,66 @@ int get_mp3_list(fs::FS fs, String dir_name, String file_list[256]){
   return i;
 }
 
-
-// Button 1
-void click1() {
-  Serial.println("Button 1 click.");
+// Stop current playing mp3
+void stop_mp3(){
+  Serial.println("Stopping mp3");
+  audio.stopSong();
+  delay(500);       // Wait for to finish
 }
+
+// Next mp3
+void next_mp3(){
+  stop_mp3();
+
+  int index = mp3_index;
+  Serial.print("Number of files:");
+  Serial.println(file_num);
+  Serial.print("index:");
+  Serial.println(mp3_index);
+
+  if (mp3_index < file_num)
+  {
+    mp3_index++;
+  }
+  if (mp3_index >= file_num)
+  {
+    mp3_index = 0;
+  }
+  
+  String mp3_path = startup_melody_dir + "/" + file_list[mp3_index];
+  Serial.println(mp3_path);
+
+  // Play mp3
+  audio.connecttoFS(SD, mp3_path.c_str());
+}
+
+// Previous mp3
+void previous_mp3(){
+  stop_mp3();
+
+  int index = mp3_index;
+  Serial.print("Number of files:");
+  Serial.println(file_num);
+  Serial.print("index:");
+  Serial.println(mp3_index);
+
+  if (mp3_index <= file_num)
+  {
+    mp3_index--;
+  }
+  if (mp3_index <= 0)
+  {
+    mp3_index = file_num - 1;
+  }
+  
+  
+  String mp3_path = startup_melody_dir + "/" + file_list[mp3_index];
+  Serial.println(mp3_path);
+
+  // Play mp3
+  audio.connecttoFS(SD, mp3_path.c_str());
+}
+
 
 // This function will be called once, when the button1 is pressed for a long time.
 void longPressStart1() {
@@ -89,17 +144,6 @@ void longPressStop1() {
 }
 
 
-// Button 2
-void click2() {
-  Serial.println("Stopping song");
-  audio.stopSong();
-  delay(500);  
-  // Todo
-  // Wait for thread 1 to finish before continiue
-
-  String path = "/startup_melody/4Welcome to your 86.mp3";
-  audio.connecttoFS(SD, path.c_str());
-}
 
 void longPressStart2() {
   Serial.println("Button 2 longPress start");
@@ -128,17 +172,11 @@ void Task_btn( void * pvParameters ){
   }
 }
 
-
-void setup() {
+void init(){
   // Initialize serial port
   Serial.begin(115200);
 
 
-// This statement will declare pin 15 as digital input 
-pinMode(15, INPUT);
-pinMode(2, INPUT);
-pinMode(4, INPUT);
-pinMode(32, INPUT);
 
   // Initialize SD card
   pinMode(SD_CS, OUTPUT);      
@@ -158,35 +196,28 @@ pinMode(32, INPUT);
     
   // Set Volume
   audio.setVolume(10); //21 max volume
+}
 
-  // Adds all mp3 files in directory to file_list
-  file_num = get_mp3_list(SD, startup_melody_dir, file_list);
-  Serial.print("Mp3 list count: ");
-  Serial.println(file_num);
-
-  // Picks random mp3 file
-  int random_index = random(file_num);
-  Serial.println(random_index);
-
-  String mp3_path = startup_melody_dir + "/" + file_list[random_index];
-  Serial.print(mp3_path);
-
-  // Play mp3
-  audio.connecttoFS(SD, mp3_path.c_str());
+void init_Btn(){
+  pinMode(15, INPUT);
+  pinMode(2, INPUT);
+  pinMode(4, INPUT);
+  pinMode(32, INPUT);
 
   // link the button 1 functions.
-  button1.attachClick(click1);
+  button1.attachClick(previous_mp3);
   button1.attachLongPressStart(longPressStart1);
   button1.attachLongPressStop(longPressStop1);
   button1.attachDuringLongPress(longPress1);
 
   // link the button 2 functions.
-  button2.attachClick(click2);
+  button2.attachClick(next_mp3);
   button2.attachLongPressStart(longPressStart2);
   button2.attachLongPressStop(longPressStop2);
   button2.attachDuringLongPress(longPress2);
 
-    //create a task that will be executed in the Task1code() function, with priority 1 and executed on core 0
+
+  //create a task that will be executed in the Task1code() function, with priority 1 and executed on core 0
   xTaskCreatePinnedToCore(
                     Task_btn,   /* Task function. */
                     "Task_btn",     /* name of task. */
@@ -194,13 +225,35 @@ pinMode(32, INPUT);
                     NULL,        /* parameter of the task */
                     tskIDLE_PRIORITY,           /* priority of the task */
                     &Task1,      /* Task handle to keep track of created task */
-                    0);          /* pin task to core 0 */                  
-   
+                    0);          /* pin task to core 0 */     
+}
+
+
+void setup() {
+  init();
+  init_Btn();
+
+
+  // Adds all mp3 files in directory to file_list
+  file_num = get_mp3_list(SD, startup_melody_dir, file_list);
+  Serial.print("Mp3 list count: ");
+  Serial.println(file_num);
+
+  // Picks random mp3 file
+  mp3_index = random(file_num);
+
+  Serial.print("Mp3 index: ");
+  Serial.println(mp3_index);
+
+  String mp3_path = startup_melody_dir + "/" + file_list[mp3_index];
+  Serial.print(mp3_path);
+
+  // Play mp3
+  audio.connecttoFS(SD, mp3_path.c_str());
 }
 
 
 
 void loop() {
   audio.loop();
-
 }
