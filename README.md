@@ -16,13 +16,15 @@ Car melody box that plays an startup sound/melody when power is supplied. It's m
 
 # Libraries
 - ESP32-audioI2S https://github.com/schreibfaul1/ESP32-audioI2S
+- OneButton https://github.com/mathertel/OneButton
 
 # Sound file source examples:
-https://ko-fi.com/s/8723a46daa
+- https://ko-fi.com/s/0c76c753a3
+- https://ko-fi.com/s/8723a46daa
 
 # SD card directory structure:
 - /startup_melody (Mp3 to be played at startup random)
 
 # IDE
-- Visual studio code
-- Platformio
+- ![Visual Studio Code](https://img.shields.io/badge/Visual%20Studio%20Code-0078d7.svg?style=for-the-badge&logo=visual-studio-code&logoColor=white)
+- ![PlatformIO](https://img.shields.io/badge/-PlatformIO-FF7F00.svg?style=for-the-badge&logoColor=white)
