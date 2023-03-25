@@ -40,7 +40,7 @@ TaskHandle_t Task1;
 
 // Audio object
 Audio audio;
-int audio_volume = 0;
+int audio_volume = 10;
 
 // File
 File dir;
@@ -51,6 +51,8 @@ int file_index = 0;
 String file_list[256];
 int mp3_index = 0;
 
+File jsonFile;
+DynamicJsonDocument doc(1024);
 
 
 
@@ -135,6 +137,56 @@ void previous_mp3(){
   audio.connecttoFS(SD, mp3_path.c_str());
 }
 
+void readConfigFile(){
+
+
+  Serial.println("Config file:");
+  jsonFile = SD.open("/config.json", FILE_READ);
+
+  if (!jsonFile) {
+    Serial.println("Failed to open JSON file, reverting to default values");
+  }
+
+  // Parse JSON file
+  DeserializationError error = deserializeJson(doc, jsonFile);
+  if (error) {
+    Serial.println("Error on parsing JSON file.");
+  }
+
+  // Extract values from JSON
+  audio_volume = doc["audio_volume"].as<int>();
+  audio.setVolume(audio_volume);
+
+  default_mp3 = doc["default_mp3"].as<String>();
+
+  Serial.println(audio_volume);
+  Serial.println(default_mp3);
+
+  jsonFile.close();  
+}
+
+void updateConfigFile(){
+  // Open JSON file for writing
+  jsonFile = SD.open("/config.json", FILE_WRITE);
+  if (!jsonFile) {
+    Serial.println("Failed to open JSON file for writing.");
+    while (1);
+  }
+
+  // Update JSON object with new values
+  doc["audio_volume"] = audio_volume;
+  doc["default_mp3"] = default_mp3;
+
+  // Serialize JSON object and write to file
+  if (serializeJson(doc, jsonFile) == 0) {
+    Serial.println("Failed to write updated JSON to file.");
+  }
+  
+  // Close JSON file
+  jsonFile.close();
+}
+
+
 // Volume control - increase
 void increase_volume(){
   if (audio_volume <= 21)
@@ -144,6 +196,7 @@ void increase_volume(){
   audio.setVolume(audio_volume);
   Serial.print("Volume:");
   Serial.println(audio_volume);
+  updateConfigFile();
   delay(200);
 }
 
@@ -156,16 +209,17 @@ void decrease_volume(){
   audio.setVolume(audio_volume);
   Serial.print("Volume:");
   Serial.println(audio_volume);
+  updateConfigFile();
   delay(200);
 }
 
 void shuffle_mode_true(){
-  Serial.println("Shuffle mode True");
+  Serial.println("Shuffle mode on");
   shuffle = true;
 }
 
 void shuffle_mode_false(){
-  Serial.println("Shuffle mode False");
+  Serial.println("Shuffle mode off");
   shuffle = false;
 }
 
@@ -188,8 +242,6 @@ void init(){
   // Initialize serial port
   Serial.begin(115200);
 
-
-
   // Initialize SD card
   pinMode(SD_CS, OUTPUT);      
   digitalWrite(SD_CS, HIGH); 
@@ -207,8 +259,7 @@ void init(){
   audio.setPinout(I2S_BCLK, I2S_LRC, I2S_DOUT);
     
   // Set Volume
-  audio_volume = 10;
-  audio.setVolume(audio_volume); //21 max volume
+  audio.setVolume(audio_volume);      //21 max volume
 }
 
 void setCurrentMp3(){
@@ -233,41 +284,16 @@ void init_btn(){
   xTaskCreatePinnedToCore(
                     Task_buttonHandler,           /* Task function. */
                     "Task_buttonHandler",         /* name of task. */
-                    10000,              /* Stack size of task */
-                    NULL,               /* parameter of the task */
-                    tskIDLE_PRIORITY,   /* priority of the task */
-                    &Task1,             /* Task handle to keep track of created task */
-                    0);                 /* pin task to core 0 */     
+                    10000,                        /* Stack size of task */
+                    NULL,                         /* parameter of the task */
+                    tskIDLE_PRIORITY,             /* priority of the task */
+                    &Task1,                       /* Task handle to keep track of created task */
+                    0);                           /* pin task to core 0 */     
 }
 
 
 
-void readConfigFile(){
-  File jsonFile;
-  DynamicJsonDocument doc(1024);
 
-  Serial.println("Config file:");
-  jsonFile = SD.open("/config.json", FILE_READ);
-
-  if (!jsonFile) {
-  Serial.println("Failed to open JSON file, reverting to default values");
-  }
-
-  // Parse JSON file
-  DeserializationError error = deserializeJson(doc, jsonFile);
-  if (error) {
-    Serial.println("Error on parsing JSON file.");
-  }
-
-  // Extract values from JSON
-  audio_volume = doc["audio_volume"].as<int>();
-  default_mp3 = doc["default_mp3"].as<String>();
-
-  Serial.println(doc["audio_volume"].as<int>());
-  Serial.println(doc["default_mp3"].as<String>());
-
-  jsonFile.close();  
-}
 
 
 void setup() {
@@ -281,6 +307,15 @@ void setup() {
   Serial.println(file_num);
 
   String mp3_path;  
+
+
+
+  // Toggole between shuffle mode on off dont work.
+  // If check is at wrong place, figure it out
+
+
+
+
 
   // Picks random mp3 file
   if (shuffle)
