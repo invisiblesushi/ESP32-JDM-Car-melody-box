@@ -16,26 +16,27 @@
 #define I2S_BCLK 26
 #define I2S_LRC 25
 
-// Button
-OneButton button1 = OneButton(
+// Buttons
+OneButton button_prw = OneButton(
   2,            // Input pin for the button
   false,        // Button is active LOW
   false         // Enable internal pull-up resistor
 );
 
-OneButton button2 = OneButton(
+OneButton button_nxt = OneButton(
   4,            // Input pin for the button
   false,        // Button is active LOW
   false         // Enable internal pull-up resistor
 );
 
-OneButton shuffle_sw = OneButton(
-  32,            // Input pin for the button
+OneButton sw_shuffle = OneButton(
+  32,           // Input pin for the button
   false,        // Button is active LOW
   false         // Enable internal pull-up resistor
 );
 
 bool shuffle = false;
+TaskHandle_t Task1;
 
 // Audio object
 Audio audio;
@@ -44,11 +45,14 @@ int audio_volume = 0;
 // File
 File dir;
 String startup_melody_dir = "/startup_melody";
+String default_mp3;
 int file_num = 0;
 int file_index = 0;
 String file_list[256];
 int mp3_index = 0;
-File config_file;
+
+
+
 
 int get_mp3_list(fs::FS fs, String dir_name, String file_list[256]){
 
@@ -67,7 +71,6 @@ int get_mp3_list(fs::FS fs, String dir_name, String file_list[256]){
       {
         file_list[i] = temp_file;
         i++;
-        //Serial.println(temp_file);
       }
     }
 
@@ -79,9 +82,9 @@ int get_mp3_list(fs::FS fs, String dir_name, String file_list[256]){
 
 // Stop current playing mp3
 void stop_mp3(){
-  Serial.println("Stopping mp3");
+  Serial.println("Stopping current mp3 playback");
   audio.stopSong();
-  delay(500);       // Wait for to finish
+  delay(200);           // Wait for to finish
 }
 
 // Next mp3
@@ -89,9 +92,7 @@ void next_mp3(){
   stop_mp3();
 
   int index = mp3_index;
-  Serial.print("Number of files:");
-  Serial.println(file_num);
-  Serial.print("index:");
+  Serial.print("File index:");
   Serial.println(mp3_index);
 
   if (mp3_index < file_num)
@@ -115,9 +116,7 @@ void previous_mp3(){
   stop_mp3();
 
   int index = mp3_index;
-  Serial.print("Number of files:");
-  Serial.println(file_num);
-  Serial.print("index:");
+  Serial.print("File index:");
   Serial.println(mp3_index);
 
   if (mp3_index <= file_num)
@@ -128,7 +127,6 @@ void previous_mp3(){
   {
     mp3_index = file_num - 1;
   }
-  
   
   String mp3_path = startup_melody_dir + "/" + file_list[mp3_index];
   Serial.println(mp3_path);
@@ -146,8 +144,9 @@ void increase_volume(){
   audio.setVolume(audio_volume);
   Serial.print("Volume:");
   Serial.println(audio_volume);
-  delay(500);
+  delay(200);
 }
+
 // Volume control - decrease
 void decrease_volume(){
   if (audio_volume > 1)
@@ -157,7 +156,7 @@ void decrease_volume(){
   audio.setVolume(audio_volume);
   Serial.print("Volume:");
   Serial.println(audio_volume);
-  delay(500);
+  delay(200);
 }
 
 void shuffle_mode_true(){
@@ -170,18 +169,18 @@ void shuffle_mode_false(){
   shuffle = false;
 }
 
-TaskHandle_t Task1;
+
 
 //Buttom task
-void Task_btn( void * pvParameters ){
-  Serial.print("Task_btn running on core ");
+void Task_buttonHandler( void * pvParameters ){
+  Serial.print("Task_buttonHandler running on core ");
   Serial.println(xPortGetCoreID());
 
   for(;;){
     // keep watching the push buttons:
-    button1.tick();
-    button2.tick();
-    shuffle_sw.tick();
+    button_prw.tick();
+    button_nxt.tick();
+    sw_shuffle.tick();
   }
 }
 
@@ -212,105 +211,93 @@ void init(){
   audio.setVolume(audio_volume); //21 max volume
 }
 
+void setCurrentMp3(){
+  Serial.println("setCurrentMp3");
+}
+
 void init_btn(){
   // link the button 1 functions.
-  button1.attachClick(previous_mp3);
-  button1.attachDuringLongPress(decrease_volume);
-  //button1.attachDoubleClick();
+  button_prw.attachClick(previous_mp3);
+  button_prw.attachDuringLongPress(decrease_volume);
+  button_prw.attachDoubleClick(setCurrentMp3);
 
   // link the button 2 functions.
-  button2.attachClick(next_mp3);
-  button2.attachDuringLongPress(increase_volume);
-  //button2.attachDoubleClick();
+  button_nxt.attachClick(next_mp3);
+  button_nxt.attachDuringLongPress(increase_volume);
+  button_nxt.attachDoubleClick(setCurrentMp3);
 
-  shuffle_sw.attachLongPressStart(shuffle_mode_true);
-  shuffle_sw.attachLongPressStop(shuffle_mode_false);
+  sw_shuffle.attachLongPressStart(shuffle_mode_true);
+  sw_shuffle.attachLongPressStop(shuffle_mode_false);
 
   //create a task that will be executed in the Task1code() function, with priority 1 and executed on core 0
   xTaskCreatePinnedToCore(
-                    Task_btn,   /* Task function. */
-                    "Task_btn",     /* name of task. */
-                    10000,       /* Stack size of task */
-                    NULL,        /* parameter of the task */
-                    tskIDLE_PRIORITY,           /* priority of the task */
-                    &Task1,      /* Task handle to keep track of created task */
-                    0);          /* pin task to core 0 */     
+                    Task_buttonHandler,           /* Task function. */
+                    "Task_buttonHandler",         /* name of task. */
+                    10000,              /* Stack size of task */
+                    NULL,               /* parameter of the task */
+                    tskIDLE_PRIORITY,   /* priority of the task */
+                    &Task1,             /* Task handle to keep track of created task */
+                    0);                 /* pin task to core 0 */     
 }
 
-void init_config(){
+
+
+void readConfigFile(){
+  File jsonFile;
+  DynamicJsonDocument doc(1024);
+
   Serial.println("Config file:");
-  config_file = SD.open("/config.json", FILE_READ);
+  jsonFile = SD.open("/config.json", FILE_READ);
 
-  if (config_file) {
-  Serial.println("SD Card: config_file is opened");
-
-      while (config_file.available()) { //execute while file is available
-        char letter = config_file.read(); //read next character from file
-        Serial.print(letter); //display character
-      }
-      Serial.println("");
-
-      File file2;
-      file2 = SD.open("/config.json", FILE_READ);
-
-      DynamicJsonDocument doc(1024);
-
-      // You can use a Flash String as your JSON input.
-      // WARNING: the strings in the input will be duplicated in the JsonDocument.
-      deserializeJson(doc, file2);
-      JsonObject obj = doc.as<JsonObject>();
-      String time = obj[F("startup_melody")];
-      Serial.println(time);
-
-
-      int vol = obj["audio_volume"];
-      Serial.print("Audio volume:");
-      Serial.println(vol);
-
-      const char* startup_melody_dir = obj["startup_melody"];
-      Serial.print("startup_melody_dir:");
-      Serial.println(startup_melody_dir);
-
-
-      config_file.close(); //close file
-      Serial.println("-----------------------------------");
+  if (!jsonFile) {
+  Serial.println("Failed to open JSON file, reverting to default values");
   }
-  else {
-    Serial.println("SD Card: config_file is failed to open");
+
+  // Parse JSON file
+  DeserializationError error = deserializeJson(doc, jsonFile);
+  if (error) {
+    Serial.println("Error on parsing JSON file.");
   }
-  
+
+  // Extract values from JSON
+  audio_volume = doc["audio_volume"].as<int>();
+  default_mp3 = doc["default_mp3"].as<String>();
+
+  Serial.println(doc["audio_volume"].as<int>());
+  Serial.println(doc["default_mp3"].as<String>());
+
+  jsonFile.close();  
 }
 
 
 void setup() {
   init();
   init_btn();
-  init_config();
+  readConfigFile();
 
   // Adds all mp3 files in directory to file_list
   file_num = get_mp3_list(SD, startup_melody_dir, file_list);
   Serial.print("Mp3 list count: ");
   Serial.println(file_num);
 
+  String mp3_path;  
 
+  // Picks random mp3 file
   if (shuffle)
   {
     Serial.println("Shuffle ON");
+
+    mp3_index = random(file_num);
+    Serial.print("Mp3 index: ");
+    Serial.println(mp3_index);
+    mp3_path = startup_melody_dir + "/" + file_list[mp3_index];  
   }
   else{
     Serial.println("Shuffle OFF");
+    mp3_path = startup_melody_dir + "/" + default_mp3;
   }
   
-
-  // Picks random mp3 file
-  mp3_index = random(file_num);
-
-  Serial.print("Mp3 index: ");
-  Serial.println(mp3_index);
-
-  String mp3_path = startup_melody_dir + "/" + file_list[mp3_index];
   Serial.print(mp3_path);
-
   // Play mp3
   audio.connecttoFS(SD, mp3_path.c_str());
 }
