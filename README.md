@@ -2,6 +2,12 @@
 
 Car melody box that plays an startup sound/melody when power is supplied. It's ment to be mounted in a car.
 
+# Button mapping
+- Single press  - Next or Previous mp3
+- Long press    - Increase / Decrease volume
+- Double click  - Set current mp3 as default
+- Switch        - Shuffle mode on/off
+
 <img src="/Images/Prototype.png" width="500" />
 <img src="/Images/Schematic%20diagram.png" width="800" />
 <img src="/Images/PCB.png" width="500" />
