@@ -1,37 +1,39 @@
-# ESP32-JDM-Car-melody-box
+# 🎵 ESP32-JDM-Car-melody-box 🚗🎶
 
-Car melody box that plays an startup sound/melody when power is supplied. It's ment to be mounted in a car.
+Car melody box that plays a startup sound/melody when power is supplied. It's meant to be mounted in a car.
 
-# Button mapping
+## Button Mapping
 - Single press  - Next or Previous mp3
 - Long press    - Increase / Decrease volume
-- Double click  - Set current mp3 as default
+- Double click  - Set the current mp3 as default
 - Switch        - Shuffle mode on/off
 
-<img src="/Images/Prototype.png" width="500" />
-<img src="/Images/Schematic%20diagram.png" width="800" />
-<img src="/Images/PCB.png" width="500" />
+![Prototype Image](/Images/Prototype.png)
 
-# Part list
-- ESP32 wroom 32-u usb-c
+![Schematic Diagram](/Images/Schematic%20diagram.png)
+
+![PCB Image](/Images/PCB.png)
+
+## Part List
+- ESP32 wroom 32-u USB-C
 - Max98357 I2S 3W Class D Amplifier
 - Micro SD Storage Expansion Board
 - Speaker
 - SD card
 - MP3 sound files
 
-# Libraries
-- ESP32-audioI2S https://github.com/schreibfaul1/ESP32-audioI2S
-- OneButton https://github.com/mathertel/OneButton
+## Libraries
+- [ESP32-audioI2S](https://github.com/schreibfaul1/ESP32-audioI2S)
+- [OneButton](https://github.com/mathertel/OneButton)
 
-# Sound file source examples:
-- https://ko-fi.com/s/0c76c753a3
-- https://ko-fi.com/s/8723a46daa
+## Sound File Source Examples:
+- [Example 1](https://ko-fi.com/s/0c76c753a3)
+- [Example 2](https://ko-fi.com/s/8723a46daa)
 
-# SD card directory structure:
+## SD Card Directory Structure:
 - /startup_melody (Mp3 to be played at startup random)
 
-# IDE
+## IDE
 - ![Visual Studio Code](https://img.shields.io/badge/Visual%20Studio%20Code-0078d7.svg?style=for-the-badge&logo=visual-studio-code&logoColor=white)
 - ![PlatformIO](https://img.shields.io/badge/-PlatformIO-FF7F00.svg?style=for-the-badge&logoColor=white)
 
